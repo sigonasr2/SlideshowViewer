@@ -350,7 +350,7 @@ public class SlideshowViewer {
 		} catch (NumberFormatException ex) {
 			currentdelay = -1;
 		}
-		if (currentdelay>120 || currentdelay<0) {
+		if (currentdelay>120 || currentdelay<=0) {
 			currentdelay = 5;
 			delayAmtBox.setText(Integer.toString(currentdelay));
 		}
