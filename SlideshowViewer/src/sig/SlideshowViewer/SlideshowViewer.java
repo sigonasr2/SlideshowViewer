@@ -371,7 +371,7 @@ public class SlideshowViewer {
 		if (filelist.length==0) {
 			System.out.println("Could not find any files to load!");
 			try {
-				System.out.println("\nPlease insert files into the "+dir.getCanonicalPath()+" directory and restart the program!");
+				System.out.println("\nPlease insert files into the "+dir.getCanonicalPath()+" directory!");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
