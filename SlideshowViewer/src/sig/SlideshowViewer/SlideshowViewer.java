@@ -375,7 +375,9 @@ public class SlideshowViewer {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			return false;
+			//return false;
+			slideshowDataFiles = new String[]{};
+			return true;
 		}
 		slideshowDataFiles = filelist;
 		System.out.print("Found and loaded "+filelist.length+" files!");
