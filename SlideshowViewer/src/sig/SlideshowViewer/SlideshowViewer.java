@@ -192,11 +192,10 @@ public class SlideshowViewer {
 			slideshowdirectory.mkdirs();
 			slideshowDataFiles = new String[]{};
 			try {
-				System.out.println("\nPlease insert files into the "+slideshowdirectory.getCanonicalPath()+" directory and restart the program!");
+				System.out.println("\nPlease insert files into the "+slideshowdirectory.getCanonicalPath()+" directory!");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			return;
 		}
 		
 		JFrame f = new JFrame("SlideshowViewer v1.0");
