@@ -54,6 +54,7 @@ public class SlideshowViewer {
 	public static int slideshowDelay = 60;
 	public static int slideshowMarker = 0;
 	final public static String PROGRAM_VERSION = "1.1";
+	public static List<String> debugqueue = new ArrayList<String>();
 	static Timer programClock = new Timer(1000,new ActionListener(){
 		@Override
 		public void actionPerformed(ActionEvent e) {
@@ -67,7 +68,9 @@ public class SlideshowViewer {
 			if (button.getText().contains("Start")) {
 				PrintToSystemAndAddToDebugBox("Running slideshow...");
 				SelectImage();
-				button.setText("Stop Slideshow");  
+				if (slideshowDataFiles.length>0) {
+					button.setText("Stop Slideshow");  
+				}
 			} else {
 				PrintToSystemAndAddToDebugBox("Stopping slideshow...");
 				button.setText("Start Slideshow");
@@ -147,14 +150,23 @@ public class SlideshowViewer {
 	};
 
 	public static void SelectImage() {
-		String selectedFile = slideshowDataFiles[(slideshowMarker++)%slideshowDataFiles.length];
-		if (random.getState()) {
-			selectedFile = slideshowDataFiles[(int)(Math.random()*slideshowDataFiles.length)];
+		if (slideshowDataFiles.length>0) {
+			String selectedFile = slideshowDataFiles[(slideshowMarker++)%slideshowDataFiles.length];
+			if (random.getState()) {
+				selectedFile = slideshowDataFiles[(int)(Math.random()*slideshowDataFiles.length)];
+			}
+			currentDisplayedFile = slideshowFolderPath+selectedFile;
+			nextImageChange = currentTick + slideshowDelay;
+			PrintToSystemAndAddToDebugBox("Selected image "+selectedFile+". Next change in "+slideshowDelay+" second"+((slideshowDelay!=1)?"s":"")+".");
+			ChangeSlideshowImage();
+		} else {
+			try {
+				PrintToSystemAndAddToDebugBox("\nCount not start slideshow! Please insert images into the "+new File(slideshowFolderPath).getCanonicalPath()+" directory or select a valid slideshow directory!");
+				button.setText("Stop Slideshow");  
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
 		}
-		currentDisplayedFile = slideshowFolderPath+selectedFile;
-		nextImageChange = currentTick + slideshowDelay;
-		PrintToSystemAndAddToDebugBox("Selected image "+selectedFile+". Next change in "+slideshowDelay+" second"+((slideshowDelay!=1)?"s":"")+".");
-		ChangeSlideshowImage();
 	}  
 	
 	private static void ChangeSlideshowImage() {
@@ -174,16 +186,15 @@ public class SlideshowViewer {
 	}
 
 	public static void main(String[] args) {
-		List<String> debugqueue = new ArrayList<String>();
 		
-		PrintToSystemAndAddToQueue(debugqueue,"Slideshow Viewer v"+PROGRAM_VERSION+" Started.");
+		PrintToSystemAndAddToQueue("Slideshow Viewer v"+PROGRAM_VERSION+" Started.");
 		
 		programClock.start();
 		
 		File config_file = new File("config_slideshow.txt");
 		File slideshowdirectory = null;
 		if (!config_file.exists()) {
-			PrintToSystemAndAddToQueue(debugqueue,"\nConfiguration file does not exist...Creating one.");
+			PrintToSystemAndAddToQueue("\nConfiguration file does not exist...Creating one.");
 			CreateAndSaveConfigurationFile();
 		} else {
 			LoadConfigurationFile();
@@ -191,17 +202,17 @@ public class SlideshowViewer {
 		slideshowdirectory = new File(slideshowFolderPath);
 		
 		if (slideshowdirectory!=null && slideshowdirectory.exists()) {
-			PrintToSystemAndAddToQueue(debugqueue," Loading slideshow data...");
+			PrintToSystemAndAddToQueue(" Loading slideshow data...");
 			if (!LoadSlideshowData(slideshowdirectory)) {
 				return;
 			}
 		} else {
-			PrintToSystemAndAddToQueue(debugqueue,"\nSlideshow data does not exist...Creating a slideshow directory...");
+			PrintToSystemAndAddToQueue("\nSlideshow data does not exist...Creating a slideshow directory...");
 			slideshowdirectory = new File("./slideshow");
 			slideshowdirectory.mkdirs();
 			slideshowDataFiles = new String[]{};
 			try {
-				PrintToSystemAndAddToQueue(debugqueue,"\nPlease insert files into the "+slideshowdirectory.getCanonicalPath()+" directory!");
+				PrintToSystemAndAddToQueue("\nPlease insert files into the "+slideshowdirectory.getCanonicalPath()+" directory!");
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
@@ -326,6 +337,7 @@ public class SlideshowViewer {
         for (String s : debugqueue) {
         	debugBox.setText(debugBox.getText()+s+"\n");
         }
+        debugqueue.clear();
         debugBox.setWrapStyleWord(true);
         JScrollPane scrollPane = new JScrollPane(debugBox); 
         scrollPane.setPreferredSize(new Dimension(320,96));
@@ -361,14 +373,27 @@ public class SlideshowViewer {
         f.pack();
 	}
 
-	private static void PrintToSystemAndAddToQueue(List<String> debugqueue, String string) {
+	private static void PrintToSystemAndAddToQueue(String string) {
 		debugqueue.add(string);
 		System.out.println(string);
 	}
 	
 	public static void PrintToSystemAndAddToDebugBox(String message) {
-        debugBox.setText((debugBox.getText().length()>5000?debugBox.getText().substring(debugBox.getText().length()-5000, debugBox.getText().length()-1):debugBox.getText())+message+"\n");
+		if (debugBox!=null) {
+			debugBox.setText((debugBox.getText().length()>5000?debugBox.getText().substring(debugBox.getText().length()-5000, debugBox.getText().length()-1):debugBox.getText())+message+"\n");
+		} else {
+			debugqueue.add(message);
+		}
         System.out.println(message);
+	}
+	
+	public static void FlushDebugQueue() {
+		if (debugBox!=null) {
+			for (String s : debugqueue) {
+				debugBox.setText((debugBox.getText().length()>5000?debugBox.getText().substring(debugBox.getText().length()-5000, debugBox.getText().length()-1):debugBox.getText())+s+"\n");
+			}
+			debugqueue.clear();
+		}
 	}
 
 	protected static void performStep() {
@@ -389,6 +414,9 @@ public class SlideshowViewer {
 		if (currentdelay>7200 || currentdelay<=0) {
 			currentdelay = 60;
 			delayAmtBox.setText(Integer.toString(currentdelay));
+		}
+		if (debugqueue.size()>0) {
+			FlushDebugQueue();
 		}
 		slideshowDelay = currentdelay;
 	}
