@@ -53,7 +53,8 @@ public class SlideshowViewer {
 	public static long nextImageChange = 0;
 	public static int slideshowDelay = 60;
 	public static int slideshowMarker = 0;
-	final public static String PROGRAM_VERSION = "1.1";
+	final public static String PROGRAM_VERSION = "1.2";
+	public static int debugLevel = 1;
 	public static List<String> debugqueue = new ArrayList<String>();
 	static Timer programClock = new Timer(1000,new ActionListener(){
 		@Override
@@ -377,6 +378,12 @@ public class SlideshowViewer {
 		debugqueue.add(string);
 		System.out.println(string);
 	}
+	private static void PrintDebugMessageToSystemAndAddToQueue(String string) {
+		if (debugLevel>=2) {
+			debugqueue.add(string);
+			System.out.println(string);
+		}
+	}
 	
 	public static void PrintToSystemAndAddToDebugBox(String message) {
 		if (debugBox!=null) {
@@ -390,19 +397,22 @@ public class SlideshowViewer {
 	public static void FlushDebugQueue() {
 		if (debugBox!=null) {
 			for (String s : debugqueue) {
-				debugBox.setText((debugBox.getText().length()>5000?debugBox.getText().substring(debugBox.getText().length()-5000, debugBox.getText().length()-1):debugBox.getText())+s+"\n");
+			 	debugBox.setText((debugBox.getText().length()>5000?debugBox.getText().substring(debugBox.getText().length()-5000, debugBox.getText().length()-1):debugBox.getText())+s+"\n");
 			}
 			debugqueue.clear();
 		}
 	}
 
 	protected static void performStep() {
-		DetectDirectoryChange();
+		//PrintDebugMessageToSystemAndAddToQueue("Running Step...");
+		DetectDirectoryChange(); 
 		if (button.getText().contains("Stop")) {
+			PrintDebugMessageToSystemAndAddToQueue("Button says Stop...Proceed with Tick.");
 			currentTick++;
-			
+			PrintDebugMessageToSystemAndAddToQueue("  Tick is now "+currentTick);
 			if (currentTick >= nextImageChange) {
 				SelectImage();
+				PrintDebugMessageToSystemAndAddToQueue(" Changing image...");
 			}
 		}
 		int currentdelay = 60;
@@ -419,6 +429,7 @@ public class SlideshowViewer {
 			FlushDebugQueue();
 		}
 		slideshowDelay = currentdelay;
+		//PrintDebugMessageToSystemAndAddToQueue(" Delay is "+slideshowDelay);
 	}
 
 	private static void DetectDirectoryChange() {
@@ -486,6 +497,7 @@ public class SlideshowViewer {
 		sig.SlideshowViewer.FileUtils.logToFile("DELAY="+slideshowDelay+"", "config_slideshow.txt");
 		sig.SlideshowViewer.FileUtils.logToFile("MARKER="+slideshowMarker+"", "config_slideshow.txt");
 		sig.SlideshowViewer.FileUtils.logToFile("VERSION="+PROGRAM_VERSION+"", "config_slideshow.txt");
+		sig.SlideshowViewer.FileUtils.logToFile("LOGGINGLEVEL="+debugLevel+"", "config_slideshow.txt");
 	}
 	
 	private static void LoadConfigurationFile() {
@@ -495,6 +507,10 @@ public class SlideshowViewer {
 			if (data.length==5) {
 				System.out.println("\nConfig does not have correct number of data points! Set it up as version 1.0!");
 				sig.SlideshowViewer.FileUtils.logToFile("VERSION=1.0", "config_slideshow.txt");
+			}
+			if (data.length==6) {
+				System.out.println("\nConfig does not have correct number of data points! Set it up with logginglevel!");
+				sig.SlideshowViewer.FileUtils.logToFile("LOGGINGLEVEL=1", "config_slideshow.txt");
 			}
 			data = sig.SlideshowViewer.FileUtils.readFromFile("config_slideshow.txt");
 			int counter = 0;
@@ -531,6 +547,9 @@ public class SlideshowViewer {
 							System.out.println("Upgrading to version 1.1...");
 							outputFilePath = "./slideshow_image.png";
 						}
+					}break;
+					case 6:{
+						debugLevel = Integer.parseInt(split);
 					}break;
 					default:
 						return;
