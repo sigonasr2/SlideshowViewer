@@ -15,6 +15,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.TimerTask;
 
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -56,14 +57,7 @@ public class SlideshowViewer {
 	final public static String PROGRAM_VERSION = "1.2";
 	public static int debugLevel = 1;
 	public static List<String> debugqueue = new ArrayList<String>();
-	static Timer programClock = new Timer(1000,new ActionListener(){
-		@Override
-		public void actionPerformed(ActionEvent e) {
-			
-			performStep();
-			
-		}
-	});
+	static java.util.Timer programClock = new java.util.Timer("Program Clock",true);
 	public static ActionListener buttonListener = new ActionListener(){
 		public void actionPerformed(ActionEvent e){
 			if (button.getText().contains("Start")) {
@@ -190,7 +184,15 @@ public class SlideshowViewer {
 		
 		PrintToSystemAndAddToQueue("Slideshow Viewer v"+PROGRAM_VERSION+" Started.");
 		
-		programClock.start();
+		//programClock.start();
+		programClock.scheduleAtFixedRate(new TimerTask() {
+
+			@Override
+			public void run() {
+				performStep();
+			}
+			
+		}, 1000, 1000);
 		
 		File config_file = new File("config_slideshow.txt");
 		File slideshowdirectory = null;
@@ -372,6 +374,9 @@ public class SlideshowViewer {
         f.setLocationRelativeTo(null);
         f.setBounds(0, 0, 480, 120);
         f.pack();
+        //f.setVisible(true);
+        
+        while (true);
 	}
 
 	private static void PrintToSystemAndAddToQueue(String string) {
@@ -388,6 +393,8 @@ public class SlideshowViewer {
 	public static void PrintToSystemAndAddToDebugBox(String message) {
 		if (debugBox!=null) {
 			debugBox.setText((debugBox.getText().length()>5000?debugBox.getText().substring(debugBox.getText().length()-5000, debugBox.getText().length()-1):debugBox.getText())+message+"\n");
+			//debugBox.setAutoscrolls(true);
+			debugBox.setCaretPosition(debugBox.getText().length());
 		} else {
 			debugqueue.add(message);
 		}
@@ -399,6 +406,8 @@ public class SlideshowViewer {
 			for (String s : debugqueue) {
 			 	debugBox.setText((debugBox.getText().length()>5000?debugBox.getText().substring(debugBox.getText().length()-5000, debugBox.getText().length()-1):debugBox.getText())+s+"\n");
 			}
+			//debugBox.setAutoscrolls(true);
+			debugBox.setCaretPosition(debugBox.getText().length());
 			debugqueue.clear();
 		}
 	}
