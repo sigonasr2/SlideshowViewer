@@ -14,6 +14,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 import java.util.TimerTask;
 
@@ -57,7 +59,8 @@ public class SlideshowViewer {
 	final public static String PROGRAM_VERSION = "1.2";
 	public static int debugLevel = 1;
 	public static List<String> debugqueue = new ArrayList<String>();
-	static java.util.Timer programClock = new java.util.Timer("Program Clock",true);
+	//static java.util.Timer programClock = new java.util.Timer("Program Clock",true);
+	static int lastSecond = Calendar.getInstance().get(Calendar.SECOND);
 	public static ActionListener buttonListener = new ActionListener(){
 		public void actionPerformed(ActionEvent e){
 			if (button.getText().contains("Start")) {
@@ -185,14 +188,14 @@ public class SlideshowViewer {
 		PrintToSystemAndAddToQueue("Slideshow Viewer v"+PROGRAM_VERSION+" Started.");
 		
 		//programClock.start();
-		programClock.scheduleAtFixedRate(new TimerTask() {
+		/*programClock.scheduleAtFixedRate(new TimerTask() {
 
 			@Override
 			public void run() {
 				performStep();
 			}
 			
-		}, 1000, 1000);
+		}, 1000, 1000);*/
 		
 		File config_file = new File("config_slideshow.txt");
 		File slideshowdirectory = null;
@@ -376,7 +379,17 @@ public class SlideshowViewer {
         f.pack();
         //f.setVisible(true);
         
-        while (true);
+        while (true) {
+        	if (lastSecond!=Calendar.getInstance().get(Calendar.SECOND)) {
+        		lastSecond = Calendar.getInstance().get(Calendar.SECOND);
+        		performStep();
+        	}
+    		try {
+				Thread.sleep(1000);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+        }
 	}
 
 	private static void PrintToSystemAndAddToQueue(String string) {
